@@ -6,12 +6,11 @@ project(
     LANGUAGES CXX
 )
 
-add_library(${PROJECT_NAME})
+set(TARGET_NAME lib${PROJECT_NAME})
+add_library(${TARGET_NAME})
 file(GLOB SOURCES "src/*.cpp")
 
-target_include_directories(${PROJECT_NAME} PUBLIC include)
-target_sources(${PROJECT_NAME} PRIVATE ${SOURCES})
-
-target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
-
-# add_subdirectory(test)
+target_include_directories(${TARGET_NAME} PUBLIC include)
+target_sources(${TARGET_NAME} PRIVATE ${SOURCES})
+target_compile_features(${TARGET_NAME} PUBLIC cxx_std_20)
+add_subdirectory(test)
