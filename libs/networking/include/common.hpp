@@ -3,6 +3,8 @@
 #include <cstring>
 #include <stdexcept>
 
+#define INVALID_SOCKET -1
+
 class SocketException : public std::runtime_error {
   public:
     SocketException(const std::string &message)

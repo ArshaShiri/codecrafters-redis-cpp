@@ -45,7 +45,7 @@ bool set_non_blocking(int fd) {
     int one = 1;
 
     socket_fd = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
-    if (socket_fd == -1) {
+    if (socket_fd == INVALID_SOCKET) {
         throw SocketException("socket() failed.");
     }
 
