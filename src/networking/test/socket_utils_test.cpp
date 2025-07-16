@@ -6,7 +6,7 @@
 
 #include <gtest/gtest.h>
 
-#include "include/socket_utils.hpp"
+#include "socket_utils.hpp"
 
 namespace {
 
