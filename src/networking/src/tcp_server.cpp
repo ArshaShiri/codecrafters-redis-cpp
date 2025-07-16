@@ -54,11 +54,18 @@ void TCPServer::run() {
 
                 // Print clinet address info
                 char address_buffer[100];
-                getnameinfo((struct sockaddr *)&client_address, client_len, address_buffer, 0, 0, 0, NI_NUMERICHOST);
+                getnameinfo((struct sockaddr *)&client_address,
+                            client_len,
+                            address_buffer,
+                            sizeof(address_buffer),
+                            0,
+                            0,
+                            NI_NUMERICHOST);
                 std::cout << "New connectio from: " << address_buffer << std::endl;
             } else {
                 char read[1024];
                 const auto bytes_received = recv(socket_fd, read, sizeof(read), 0);
+                std::cout << bytes_received << " bytes received:\n" << read;
 
                 const auto connection_closed = bytes_received < 1;
                 if (connection_closed) {
@@ -70,9 +77,9 @@ void TCPServer::run() {
 
                 // For now ignore the incoming message
 
-                const std::string TEST_MESSAGE = "pong";
+                const std::string TEST_MESSAGE = "+PONG\r\n";
                 const auto bytes_sent = send(socket_fd, TEST_MESSAGE.c_str(), TEST_MESSAGE.size(), 0);
-                std::cout << "sent: " << bytes_sent << " bytes" << std::endl;
+                std::cout << bytes_sent << " bytes sent:\n" << TEST_MESSAGE;
             }
         }
     }
