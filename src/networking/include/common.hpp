@@ -3,7 +3,7 @@
 #include <cstring>
 #include <stdexcept>
 
-#define INVALID_SOCKET -1
+constexpr auto INVALID_SOCKET = -1;
 
 class SocketException : public std::runtime_error {
   public:

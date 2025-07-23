@@ -7,6 +7,12 @@
 #include <string>
 #include <vector>
 
+/**
+ * @brief Use to configure a socket. Depending on the use of the socket (client or server) each field should be
+ * configured differently. (e.g. On a listening socket, port means the port that is listening on but on a client socket
+ * it means the port that it connects to.)
+ *
+ */
 struct TCPSocketConfig {
     std::string ip;
     int port = -1;
@@ -22,6 +28,8 @@ struct TCPSocketConfig {
         return ss.str();
     }
 };
+
+bool set_non_blocking(int fd);
 
 // Create TCPSocket with provided attributes to either listen-on / connect-to.
 [[nodiscard]] int create_socket(const TCPSocketConfig &socket_config);

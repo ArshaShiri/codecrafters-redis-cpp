@@ -1,86 +1,93 @@
+#include <array>
 #include <iostream>
-#include <netdb.h>
-#include <unistd.h>
+#include <sys/epoll.h>
 
 #include "common.hpp"
-#include "socket_utils.hpp"
 #include "tcp_server.hpp"
 
-TCPServer::TCPServer(int listening_port) {
-    TCPSocketConfig config;
-    config.ip = "0";
-    config.port = listening_port;
-    config.is_listening = true;
-    config.is_blocking = true;
-    config.needs_so_timestamp = false;
+namespace {
+constexpr auto LOCAL_HOST = "0";
+constexpr auto LISTENING_SOCKET = true;
+constexpr auto BLOCKING = false;
+constexpr auto NO_TIME_STAMP = false;
 
-    listening_socket_ = create_socket(config);
+std::array<epoll_event, 1024> events;
+
+void add_to_epoll_list(TCPSocket *socket, int epoll_file_descriptor) {
+    epoll_event ev{EPOLLET | EPOLLIN | EPOLLOUT, {reinterpret_cast<void *>(socket)}};
+
+    if (epoll_ctl(epoll_file_descriptor, EPOLL_CTL_ADD, socket->file_descriptor, &ev)) {
+        throw SocketException("Failed to add to epoll list");
+    }
+}
+} // namespace
+
+TCPServer::TCPServer(int listening_port)
+  : listening_socket{TCPSocketConfig{LOCAL_HOST, listening_port, LISTENING_SOCKET, BLOCKING, NO_TIME_STAMP}} {
+    epoll_file_descriptor = epoll_create(1);
+
+    if (epoll_file_descriptor < 0) {
+        throw SocketException("Epoll creation failed");
+    }
+
+    add_to_epoll_list(&listening_socket, epoll_file_descriptor);
 }
 
-TCPServer::~TCPServer() {
-    close(listening_socket_);
-}
+void TCPServer::poll() {
+    const auto max_number_of_events = sockets.size() + 1;
+    const auto number_of_file_events = epoll_wait(epoll_file_descriptor, events.data(), max_number_of_events, 0);
+    if (number_of_file_events < 0) {
+        throw SocketException("Epoll wait failed");
+    }
 
-void TCPServer::run() {
-    fd_set sockets;
-    FD_ZERO(&sockets);
-    FD_SET(listening_socket_, &sockets);
-    auto max_socket = listening_socket_;
+    for (int event_number{0}; event_number < number_of_file_events; ++event_number) {
+        const auto &event = events[event_number];
+        auto socket = reinterpret_cast<TCPSocket *>(event.data.ptr);
 
-    for (;;) {
-        fd_set reads = sockets;
-
-        if (select(max_socket + 1, &reads, 0, 0, 0) < 0) {
-            throw SocketException("select failed.");
-        }
-
-        for (int socket_fd = 1; socket_fd <= max_socket; ++socket_fd) {
-            if (!FD_ISSET(socket_fd, &reads)) {
+        // Available for read
+        if (event.events & EPOLLIN) {
+            std::cout << "EPOLLIN" << std::endl;
+            if (socket == &listening_socket) {
+                add_new_connections();
                 continue;
-            }
-
-            // Handle a new connection
-            if (socket_fd == listening_socket_) {
-                struct sockaddr_storage client_address;
-                socklen_t client_len = sizeof(client_address);
-                auto client_socket = accept(listening_socket_, (struct sockaddr *)&client_address, &client_len);
-
-                if (client_socket == INVALID_SOCKET) {
-                    throw SocketException("Cannot get clinet socket");
-                }
-
-                FD_SET(client_socket, &sockets);
-                max_socket = std::max(max_socket, client_socket);
-
-                // Print clinet address info
-                char address_buffer[100];
-                getnameinfo((struct sockaddr *)&client_address,
-                            client_len,
-                            address_buffer,
-                            sizeof(address_buffer),
-                            0,
-                            0,
-                            NI_NUMERICHOST);
-                std::cout << "New connectio from: " << address_buffer << std::endl;
             } else {
-                char read[1024];
-                const auto bytes_received = recv(socket_fd, read, sizeof(read), 0);
-                std::cout << bytes_received << " bytes received:\n" << read;
-
-                const auto connection_closed = bytes_received < 1;
-                if (connection_closed) {
-                    FD_CLR(socket_fd, &sockets);
-                    close(socket_fd);
-                    std::cout << "connection closed: " << socket_fd << std::endl;
+                std::cout << "receive" << std::endl;
+                const auto bytes_received = socket->receive();
+                if (bytes_received <= 0) {
+                    std::cout << "Connection is closed" << std::endl;
+                    sockets.erase(
+                      std::remove_if(sockets.begin(), sockets.end(), [&](const auto &s) { return s.get() == socket; }),
+                      sockets.end());
                     continue;
                 }
-
-                // For now ignore the incoming message
-
-                const std::string TEST_MESSAGE = "+PONG\r\n";
-                const auto bytes_sent = send(socket_fd, TEST_MESSAGE.c_str(), TEST_MESSAGE.size(), 0);
-                std::cout << bytes_sent << " bytes sent:\n" << TEST_MESSAGE;
             }
         }
+        if (event.events & EPOLLOUT) {
+            std::cout << "EPOLLOUT" << std::endl;
+            socket->send();
+        }
+    }
+}
+
+void TCPServer::add_new_connections() {
+    for (;;) {
+        struct sockaddr_storage client_address;
+        socklen_t client_len = sizeof(client_address);
+
+        const auto client_file_descriptor =
+          accept(listening_socket.file_descriptor, (struct sockaddr *)&client_address, &client_len);
+        if (client_file_descriptor == INVALID_SOCKET) {
+            break;
+        }
+
+        std::cout << "There is a new connection" << std::endl;
+        if (!set_non_blocking(client_file_descriptor)) {
+            throw SocketException("setNonBlocking() failed.");
+        }
+
+        auto socket = std::make_unique<TCPSocket>(client_file_descriptor);
+        socket->recv_callback = recv_callback;
+        add_to_epoll_list(socket.get(), epoll_file_descriptor);
+        sockets.push_back(std::move(socket));
     }
 }

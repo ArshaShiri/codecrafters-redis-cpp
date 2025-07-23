@@ -87,9 +87,9 @@ cmake --build $build_path --parallel $(($(nproc) - 1))
 if [ $run_tests = true ]; then
     if [ $test_name = "all" ]; then
         echo "Running all tests!"
-        ctest --test-dir $build_path
+        ctest --verbose --test-dir $build_path
     else
         echo "Running test: $test_name"
-        ctest --test-dir $build_path -R "^${test_name}$"
+        ctest --verbose --test-dir $build_path -R "^${test_name}$"
     fi
 fi

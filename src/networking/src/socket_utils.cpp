@@ -11,6 +11,7 @@
 namespace {
 /// Represents the maximum number of pending / unaccepted TCP connections.
 constexpr int MAX_TCP_SERVER_BACKLOG = 1024;
+} // namespace
 
 bool set_non_blocking(int fd) {
     const auto flags = fcntl(fd, F_GETFL, 0);
@@ -19,7 +20,6 @@ bool set_non_blocking(int fd) {
 
     return (fcntl(fd, F_SETFL, flags | O_NONBLOCK) != -1);
 }
-} // namespace
 
 // Create TCPSocket with provided attributes to either listen-on / connect-to.
 [[nodiscard]] int create_socket(const TCPSocketConfig &socket_config) {

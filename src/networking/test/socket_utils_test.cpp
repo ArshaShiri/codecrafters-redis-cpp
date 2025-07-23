@@ -9,10 +9,7 @@
 #include "socket_utils.hpp"
 
 namespace {
-
 using namespace std::chrono_literals;
-std::osyncstream syncStream(std::cout);
-
 } // namespace
 
 TEST(TCPSocket, sendAndReceiveSocket) {
@@ -21,7 +18,7 @@ TEST(TCPSocket, sendAndReceiveSocket) {
     server_tcp_socket_config.is_listening = true;
     server_tcp_socket_config.is_blocking = true;
     server_tcp_socket_config.needs_so_timestamp = false;
-    server_tcp_socket_config.port = 6379;
+    server_tcp_socket_config.port = 6000;
 
     const auto server_socket_fd = create_socket(server_tcp_socket_config);
 
@@ -36,16 +33,16 @@ TEST(TCPSocket, sendAndReceiveSocket) {
     auto run_server = [&]() {
         struct sockaddr_in client_addr;
         int client_addr_len = sizeof(client_addr);
-        syncStream << "Waiting for a client to connect...\n";
+        std::cout << "Waiting for a client to connect...\n";
 
         const auto client_fd = accept(server_socket_fd, (struct sockaddr *)&client_addr, (socklen_t *)&client_addr_len);
-        syncStream << "Client connected " << client_fd << " server_socket_fd: " << server_socket_fd
-                   << " (errno: " + std::to_string(errno) + " - " + std::strerror(errno) + ")" << '\n';
+        std::cout << "Client connected " << client_fd << " server_socket_fd: " << server_socket_fd
+                  << " (errno: " + std::to_string(errno) + " - " + std::strerror(errno) + ")" << '\n';
 
         for (const auto &message : messages_to_be_sent) {
             std::this_thread::sleep_for(1000ms);
             const auto bytes_sent = send(client_fd, message.c_str(), message.size(), 0);
-            syncStream << "Sent socket: " << client_fd << ", sending: " << bytes_sent << "bytes" << std::endl;
+            std::cout << "Sent socket: " << client_fd << ", sending: " << bytes_sent << "bytes" << std::endl;
         }
 
         is_done.store(true);
@@ -56,7 +53,7 @@ TEST(TCPSocket, sendAndReceiveSocket) {
     client_tcp_socket_config.is_listening = false;
     client_tcp_socket_config.is_blocking = true;
     client_tcp_socket_config.needs_so_timestamp = false;
-    client_tcp_socket_config.port = 6379;
+    client_tcp_socket_config.port = 6000;
 
     const auto client_socket_fd = create_socket(client_tcp_socket_config);
     std::vector<std::string> received_messages{};
@@ -65,8 +62,8 @@ TEST(TCPSocket, sendAndReceiveSocket) {
         for (std::size_t idx{0}; idx < messages_to_be_sent.size(); ++idx) {
             char received[1024];
             const auto bytes_received = recv(client_socket_fd, received, 1024, 0);
-            syncStream << "Received socket: " << client_socket_fd << ", received: " << bytes_received << "bytes"
-                       << std::endl;
+            std::cout << "Received socket: " << client_socket_fd << ", received: " << bytes_received << " bytes"
+                      << std::endl;
             received_messages.push_back(received);
         }
     };
