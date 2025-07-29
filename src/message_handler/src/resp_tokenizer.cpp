@@ -10,6 +10,21 @@ const std::string CRLF = "\r\n";
 }
 
 RESPTokenizer::RESPTokenizer(const char *input, std::size_t input_size) : input_view_{input, input_size} {
+    while (position_ < input_view_.size()) {
+        const auto prefix = input_view_[position_];
+        position_++;
+
+        switch (prefix) {
+        case '*':
+            add_array();
+            break;
+        case '$':
+            add_bulk_string();
+            break;
+        default:
+            throw std::runtime_error("Invalid RESP prefix: " + std::string(1, prefix));
+        }
+    }
 }
 
 std::ostream &operator<<(std::ostream &os, const Token &token) {
@@ -39,31 +54,11 @@ std::ostream &operator<<(std::ostream &os, const Token &token) {
     return os;
 }
 
-std::vector<Token> &RESPTokenizer::tokenize() {
-    if (input_view_.empty()) {
-        return tokens_;
-    }
-
-    while (position_ < input_view_.size()) {
-        const auto prefix = input_view_[position_];
-        position_++;
-
-        switch (prefix) {
-        case '*':
-            add_array();
-            break;
-        case '$':
-            add_bulk_string();
-            break;
-        default:
-            throw std::runtime_error("Invalid RESP prefix: " + std::string(1, prefix));
-        }
-    }
-
+std::vector<Token> &RESPTokenizer::get_tokens() {
     return tokens_;
 }
 
-void RESPTokenizer::print_toknets() const {
+void RESPTokenizer::print_tokens() const {
     for (const auto &token : tokens_) {
         std::cout << token;
     }

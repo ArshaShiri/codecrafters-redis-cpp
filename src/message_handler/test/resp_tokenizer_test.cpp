@@ -15,7 +15,7 @@ TEST(RESPTokenizer, ping) {
     const std::string resp_ping = "*1\r\n$4\r\nPING\r\n";
 
     RESPTokenizer tokenizer(resp_ping.data(), resp_ping.size());
-    const auto &tokens = tokenizer.tokenize();
+    const auto &tokens = tokenizer.get_tokens();
     const std::vector<Token> expected_tokens{Token{TokenType::ARRAY, 1}, Token{TokenType::BULK_STRING, "PING"}};
 
     EXPECT_EQ(tokens, expected_tokens);
@@ -26,7 +26,7 @@ TEST(RESPTokenizer, echo) {
     const std::string resp_echo = "*2\r\n$4\r\nECHO\r\n$3\r\nhey\r\n";
 
     RESPTokenizer tokenizer(resp_echo.data(), resp_echo.size());
-    const auto &tokens = tokenizer.tokenize();
+    const auto &tokens = tokenizer.get_tokens();
     const std::vector<Token> expected_tokens{
       Token{TokenType::ARRAY, 2}, Token{TokenType::BULK_STRING, "ECHO"}, Token{TokenType::BULK_STRING, "hey"}};
 

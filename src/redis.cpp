@@ -11,7 +11,10 @@ const auto server_callback = [](auto client_socket) {
     const auto message = std::string(socket_receive_buffer.begin(),
                                      socket_receive_buffer.begin() + client_socket->next_valid_receive_index);
     std::cout << "message:\n" << message << std::endl;
-    const auto response = generate_response(socket_receive_buffer.data(), client_socket->next_valid_receive_index);
+
+    const auto response_generator =
+      ResponseGenerator{socket_receive_buffer.data(), client_socket->next_valid_receive_index};
+    const auto response = response_generator.get_response();
     client_socket->next_valid_receive_index = 0;
 
     client_socket->enqueue_to_send_buffer(response);

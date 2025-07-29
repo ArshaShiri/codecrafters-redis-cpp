@@ -25,8 +25,8 @@ struct Token {
 class RESPTokenizer {
   public:
     RESPTokenizer(const char *input, std::size_t input_size);
-    std::vector<Token> &tokenize();
-    void print_toknets() const;
+    std::vector<Token> &get_tokens();
+    void print_tokens() const;
 
   private:
     std::string_view get_view_before_the_next_CRLF();
@@ -37,5 +37,5 @@ class RESPTokenizer {
 
     std::string_view input_view_;
     std::size_t position_{0};
-    std::vector<Token> tokens_;
+    std::vector<Token> tokens_{};
 };
