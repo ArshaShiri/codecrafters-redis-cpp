@@ -9,3 +9,4 @@
 * Exceptions should be handled
 * Add latency measurement metrics
 * Handle requests based on their arrival time.
+* Replace callbacks with futures and promises in the TCP server.

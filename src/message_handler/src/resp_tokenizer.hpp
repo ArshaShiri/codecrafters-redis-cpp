@@ -1,0 +1,41 @@
+#pragma once
+
+#include <iostream>
+#include <string>
+#include <variant>
+#include <vector>
+
+enum class TokenType {
+    SIMPLE_STRING, // +
+    ERROR, // -
+    INTEGER, // :
+    BULK_STRING, // $
+    ARRAY // *
+};
+
+struct Token {
+    TokenType type;
+    std::variant<std::string_view, int> value;
+
+    bool operator==(const Token &other) const {
+        return (type == other.type) && (value == other.value);
+    };
+};
+
+class RESPTokenizer {
+  public:
+    RESPTokenizer(const char *input, std::size_t input_size);
+    std::vector<Token> &tokenize();
+    void print_toknets() const;
+
+  private:
+    std::string_view get_view_before_the_next_CRLF();
+    int get_int_from_string_view(const std::string_view &int_view) const;
+
+    void add_array();
+    void add_bulk_string();
+
+    std::string_view input_view_;
+    std::size_t position_{0};
+    std::vector<Token> tokens_;
+};
