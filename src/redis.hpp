@@ -1,3 +1,6 @@
+#include <string>
+
+#include "data_manager.hpp"
 #include "tcp_server.hpp"
 
 class Redis {
@@ -6,5 +9,6 @@ class Redis {
     void run();
 
   private:
+    DataManager<std::string, std::string> data_manager_;
     TCPServer server_;
 };

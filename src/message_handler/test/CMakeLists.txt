@@ -6,7 +6,8 @@ file(GLOB SOURCES "*.cpp" "../src/*.cpp")
 
 add_executable(${TARGET_NAME} ${SOURCES})
 
-target_include_directories(${TARGET_NAME} 
+target_include_directories(${TARGET_NAME}
+    PRIVATE "${CMAKE_SOURCE_DIR}/src/data_manager/include"
     PRIVATE "${CMAKE_SOURCE_DIR}/src/message_handler/include" 
     PRIVATE "${CMAKE_SOURCE_DIR}/src/message_handler/src"
 )
