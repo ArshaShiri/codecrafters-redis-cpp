@@ -47,6 +47,7 @@ void TCPSocket::send() noexcept {
     const auto bytes_sent =
       ::send(file_descriptor, send_buffer.data(), next_valid_send_index, MSG_DONTWAIT | MSG_NOSIGNAL);
     std::cout << bytes_sent << " bytes sent:\n";
+    next_valid_send_index = 0;
 }
 
 void TCPSocket::enqueue_to_send_buffer(const std::string &message) {
