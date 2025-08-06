@@ -27,10 +27,10 @@ int TCPSocket::receive() noexcept {
         return bytes_received;
     }
 
-    std::cout << bytes_received << " bytes received:\n"
-              << std::string{receive_buffer.data() + next_valid_receive_index,
-                             receive_buffer.data() + next_valid_receive_index + bytes_received}
-              << std::endl;
+    // std::cout << bytes_received << " bytes received:\n"
+    //           << std::string{receive_buffer.data() + next_valid_receive_index,
+    //                          receive_buffer.data() + next_valid_receive_index + bytes_received}
+    //           << std::endl;
 
     next_valid_receive_index += bytes_received;
 
@@ -44,9 +44,12 @@ int TCPSocket::receive() noexcept {
 }
 
 void TCPSocket::send() noexcept {
-    const auto bytes_sent =
-      ::send(file_descriptor, send_buffer.data(), next_valid_send_index, MSG_DONTWAIT | MSG_NOSIGNAL);
-    std::cout << bytes_sent << " bytes sent:\n";
+
+    ::send(file_descriptor, send_buffer.data(), next_valid_send_index, MSG_DONTWAIT | MSG_NOSIGNAL);
+
+    // std::cout << bytes_sent << " bytes sent:\n"
+    //           << std::string{send_buffer.data(), send_buffer.data() + next_valid_send_index} << std::endl;
+
     next_valid_send_index = 0;
 }
 

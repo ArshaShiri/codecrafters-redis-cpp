@@ -30,6 +30,11 @@ struct TCPSocket {
      */
     void send() noexcept;
 
+    /**
+     * @brief Enqueue a message to the send buffer.
+     *
+     * @param message The message to be sent.
+     */
     void enqueue_to_send_buffer(const std::string &message);
 
     // File descriptor for the socket.

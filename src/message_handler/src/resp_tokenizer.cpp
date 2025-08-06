@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include <system_error>
 
+#include "common.hpp"
 #include "resp_tokenizer.hpp"
 
 namespace {
@@ -71,18 +72,6 @@ std::string_view RESPTokenizer::get_view_before_the_next_CRLF() {
 
     // Skip the CRLF
     position_ += length + 2;
-    return result;
-}
-
-int RESPTokenizer::get_int_from_string_view(const std::string_view &int_view) const {
-    int result{};
-    auto [ptr, error_code] = std::from_chars(int_view.data(), int_view.data() + int_view.size(), result);
-
-    if (error_code == std::errc::invalid_argument) {
-        std::cout << "Cannot convert string to number!\n";
-        return -1;
-    }
-
     return result;
 }
 

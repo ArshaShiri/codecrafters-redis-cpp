@@ -30,7 +30,6 @@ class RESPTokenizer {
 
   private:
     std::string_view get_view_before_the_next_CRLF();
-    int get_int_from_string_view(const std::string_view &int_view) const;
 
     void add_array();
     void add_bulk_string();

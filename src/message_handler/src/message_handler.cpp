@@ -1,9 +1,14 @@
-#include "response_generator.hpp"
+#include "message_handler.hpp"
+#include "common.hpp"
 #include "resp_tokenizer.hpp"
 
-ResponseGenerator::ResponseGenerator(const char *input,
-                                     std::size_t input_size,
-                                     DataManager<std::string, std::string> &data_manager)
+namespace {
+using namespace std::chrono_literals;
+}
+
+MessageHandler::MessageHandler(const char *input,
+                               std::size_t input_size,
+                               DataManager<std::string, std::string> &data_manager)
   : tokenizer_(input, input_size), data_manager_(data_manager) {
     verify_input(input, input_size);
 
@@ -38,11 +43,11 @@ ResponseGenerator::ResponseGenerator(const char *input,
     }
 }
 
-const std::string &ResponseGenerator::get_response() const {
+const std::string &MessageHandler::get_response() const {
     return response_;
 }
 
-void ResponseGenerator::verify_input(const char *input, std::size_t input_size) {
+void MessageHandler::verify_input(const char *input, std::size_t input_size) {
     tokenizer_ = RESPTokenizer(input, input_size);
     const auto &tokens = tokenizer_.get_tokens();
 
@@ -73,15 +78,15 @@ void ResponseGenerator::verify_input(const char *input, std::size_t input_size) 
     }
 }
 
-void ResponseGenerator::generate_ping_response() {
+void MessageHandler::generate_ping_response() {
     response_ = "+PONG\r\n";
 }
 
-void ResponseGenerator::generate_error_response(const std::string &error_message) {
+void MessageHandler::generate_error_response(const std::string &error_message) {
     response_ = "-ERR " + error_message + "\r\n";
 }
 
-void ResponseGenerator::generate_echo_response(const std::vector<Token> &tokens) {
+void MessageHandler::generate_echo_response(const std::vector<Token> &tokens) {
     const auto &echo_token = tokens[2];
     if (echo_token.type != TokenType::BULK_STRING) {
         throw std::runtime_error("Expected third token to be a BULK_STRING type for ECHO command");
@@ -91,7 +96,7 @@ void ResponseGenerator::generate_echo_response(const std::vector<Token> &tokens)
     response_ = "$" + std::to_string(echo_value.size()) + "\r\n" + std::string(echo_value) + "\r\n";
 }
 
-void ResponseGenerator::generate_set_response(const std::vector<Token> &tokens) {
+void MessageHandler::generate_set_response(const std::vector<Token> &tokens) {
     const auto &key_token = tokens[2];
     const auto &value_token = tokens[3];
     if (key_token.type != TokenType::BULK_STRING || value_token.type != TokenType::BULK_STRING) {
@@ -102,7 +107,27 @@ void ResponseGenerator::generate_set_response(const std::vector<Token> &tokens) 
 
     const auto key = std::get<std::string_view>(key_token.value);
     const auto value = std::get<std::string_view>(value_token.value);
-    if (!data_manager_.set(std::string(key), std::string(value))) {
+
+    std::chrono::milliseconds expiry_duration{std::numeric_limits<int>::max()};
+    const auto key_value_has_expiry = tokens.size() == 6;
+
+    if (key_value_has_expiry) {
+        const auto &expiry_token = tokens[4];
+        if (expiry_token.type != TokenType::BULK_STRING) {
+            throw std::runtime_error("Expected fifth token to be a BULK_STRING type for SET command with expiry");
+        }
+
+        const auto expiry_option = std::get<std::string_view>(expiry_token.value);
+        if (expiry_option == "px") {
+            expiry_duration =
+              std::chrono::milliseconds(get_int_from_string_view(std::get<std::string_view>(tokens[5].value)));
+        } else {
+            throw std::runtime_error("Unknown expiry option: " + std::string(expiry_option));
+        }
+    }
+
+
+    if (!data_manager_.set(std::string(key), std::string(value), expiry_duration)) {
         generate_error_response("Key already exists: " + std::string(key));
         return;
     }
@@ -110,7 +135,7 @@ void ResponseGenerator::generate_set_response(const std::vector<Token> &tokens) 
     response_ = "+OK\r\n";
 }
 
-void ResponseGenerator::generate_get_response(const std::vector<Token> &tokens) {
+void MessageHandler::generate_get_response(const std::vector<Token> &tokens) {
     const auto &key_token = tokens[2];
     if (key_token.type != TokenType::BULK_STRING) {
         throw std::runtime_error("Expected third token to be a BULK_STRING type for GET command");

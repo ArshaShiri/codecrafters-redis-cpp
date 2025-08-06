@@ -2,7 +2,6 @@
 #include <iostream>
 #include <sys/epoll.h>
 
-#include "common.hpp"
 #include "tcp_server.hpp"
 
 namespace {
@@ -46,12 +45,10 @@ void TCPServer::poll() {
 
         // Available for read
         if (event.events & EPOLLIN) {
-            std::cout << "EPOLLIN" << std::endl;
             if (socket == &listening_socket) {
                 add_new_connections();
                 continue;
             } else {
-                std::cout << "receive" << std::endl;
                 const auto bytes_received = socket->receive();
                 if (bytes_received <= 0) {
                     std::cout << "Connection is closed" << std::endl;
@@ -63,7 +60,6 @@ void TCPServer::poll() {
             }
         }
         if (event.events & EPOLLOUT) {
-            std::cout << "EPOLLOUT" << std::endl;
             socket->send();
         }
     }

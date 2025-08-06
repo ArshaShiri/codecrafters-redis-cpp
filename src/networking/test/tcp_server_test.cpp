@@ -14,7 +14,7 @@ using namespace std::chrono_literals;
 
 // This test runs a server. Subsequently, two clients are connected to it and send some data.
 // The server captures the data via a callback.
-TEST(TCPServer, serverAndClient) {
+TEST(TCPServer, serverReceiveData) {
     const auto server_port = 6030;
     std::vector<std::string> received_messages{};
 

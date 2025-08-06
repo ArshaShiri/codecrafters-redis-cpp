@@ -1,6 +1,6 @@
 include(GoogleTest)
 
-set(TARGET_NAME "redis")
+set(TARGET_NAME "redis_server")
 file(GLOB SOURCES 
     "*.cpp"
     "${CMAKE_SOURCE_DIR}/src/data_manager/src/*.cpp"
@@ -12,6 +12,7 @@ file(GLOB SOURCES
 add_executable(${TARGET_NAME} ${SOURCES})
 add_subdirectory(message_handler)
 add_subdirectory(networking)
+add_subdirectory(redis)
 
 target_include_directories(${TARGET_NAME}
     PUBLIC

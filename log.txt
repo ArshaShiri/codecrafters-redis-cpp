@@ -1,0 +1,42 @@
+Consolidate compiler generated dependencies of target message_handler_tests
+Consolidate compiler generated dependencies of target redis_server
+[ 21%] Built target networking_tests
+Consolidate compiler generated dependencies of target redis_tests
+[ 25%] Building CXX object src/message_handler/test/CMakeFiles/message_handler_tests.dir/__/src/message_handler.cpp.o
+[ 28%] Building CXX object src/CMakeFiles/redis_server.dir/main.cpp.o
+[ 31%] Building CXX object src/CMakeFiles/redis_server.dir/message_handler/src/message_handler.cpp.o
+[ 34%] Building CXX object src/CMakeFiles/redis_server.dir/redis/src/redis.cpp.o
+[ 37%] Building CXX object src/redis/test/CMakeFiles/redis_tests.dir/__/__/message_handler/src/message_handler.cpp.o
+[ 40%] Building CXX object src/redis/test/CMakeFiles/redis_tests.dir/__/src/redis.cpp.o
+[ 43%] Building CXX object src/redis/test/CMakeFiles/redis_tests.dir/redis_test.cpp.o
+In file included from /home/arsha/Repos/codecrafters-redis-cpp/src/message_handler/include/message_handler.hpp:6,
+                 from /home/arsha/Repos/codecrafters-redis-cpp/src/message_handler/src/message_handler.cpp:1:
+/home/arsha/Repos/codecrafters-redis-cpp/src/data_manager/include/data_manager.hpp: In instantiation of ‘std::pair<bool, Value> DataManager<Key, Value>::get(const Key&) [with Key = std::__cxx11::basic_string<char>; Value = std::__cxx11::basic_string<char>]’:
+/home/arsha/Repos/codecrafters-redis-cpp/src/message_handler/src/message_handler.cpp:144:51:   required from here
+/home/arsha/Repos/codecrafters-redis-cpp/src/data_manager/include/data_manager.hpp:58:31: error: ‘const struct DataManager<std::__cxx11::basic_string<char>, std::__cxx11::basic_string<char> >::ValueWithExpiry’ has no member named ‘has_expiry’
+   58 |         if (value_with_expiry.has_expiry) {
+      |             ~~~~~~~~~~~~~~~~~~^~~~~~~~~~
+In file included from /home/arsha/Repos/codecrafters-redis-cpp/src/message_handler/include/message_handler.hpp:6,
+                 from /home/arsha/Repos/codecrafters-redis-cpp/src/message_handler/src/message_handler.cpp:1:
+/home/arsha/Repos/codecrafters-redis-cpp/src/data_manager/include/data_manager.hpp: In instantiation of ‘std::pair<bool, Value> DataManager<Key, Value>::get(const Key&) [with Key = std::__cxx11::basic_string<char>; Value = std::__cxx11::basic_string<char>]’:
+/home/arsha/Repos/codecrafters-redis-cpp/src/message_handler/src/message_handler.cpp:144:51:   required from here
+/home/arsha/Repos/codecrafters-redis-cpp/src/data_manager/include/data_manager.hpp:58:31: error: ‘const struct DataManager<std::__cxx11::basic_string<char>, std::__cxx11::basic_string<char> >::ValueWithExpiry’ has no member named ‘has_expiry’
+   58 |         if (value_with_expiry.has_expiry) {
+      |             ~~~~~~~~~~~~~~~~~~^~~~~~~~~~
+In file included from /home/arsha/Repos/codecrafters-redis-cpp/src/message_handler/include/message_handler.hpp:6,
+                 from /home/arsha/Repos/codecrafters-redis-cpp/src/message_handler/src/message_handler.cpp:1:
+/home/arsha/Repos/codecrafters-redis-cpp/src/data_manager/include/data_manager.hpp: In instantiation of ‘std::pair<bool, Value> DataManager<Key, Value>::get(const Key&) [with Key = std::__cxx11::basic_string<char>; Value = std::__cxx11::basic_string<char>]’:
+/home/arsha/Repos/codecrafters-redis-cpp/src/message_handler/src/message_handler.cpp:144:51:   required from here
+/home/arsha/Repos/codecrafters-redis-cpp/src/data_manager/include/data_manager.hpp:58:31: error: ‘const struct DataManager<std::__cxx11::basic_string<char>, std::__cxx11::basic_string<char> >::ValueWithExpiry’ has no member named ‘has_expiry’
+   58 |         if (value_with_expiry.has_expiry) {
+      |             ~~~~~~~~~~~~~~~~~~^~~~~~~~~~
+gmake[2]: *** [src/CMakeFiles/redis_server.dir/build.make:104: src/CMakeFiles/redis_server.dir/message_handler/src/message_handler.cpp.o] Error 1
+gmake[2]: *** Waiting for unfinished jobs....
+gmake[2]: *** [src/message_handler/test/CMakeFiles/message_handler_tests.dir/build.make:90: src/message_handler/test/CMakeFiles/message_handler_tests.dir/__/src/message_handler.cpp.o] Error 1
+gmake[1]: *** [CMakeFiles/Makefile2:222: src/message_handler/test/CMakeFiles/message_handler_tests.dir/all] Error 2
+gmake[1]: *** Waiting for unfinished jobs....
+gmake[2]: *** [src/redis/test/CMakeFiles/redis_tests.dir/build.make:90: src/redis/test/CMakeFiles/redis_tests.dir/__/__/message_handler/src/message_handler.cpp.o] Error 1
+gmake[2]: *** Waiting for unfinished jobs....
+gmake[1]: *** [CMakeFiles/Makefile2:196: src/CMakeFiles/redis_server.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:274: src/redis/test/CMakeFiles/redis_tests.dir/all] Error 2
+gmake: *** [Makefile:101: all] Error 2

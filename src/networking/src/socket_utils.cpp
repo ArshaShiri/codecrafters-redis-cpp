@@ -5,7 +5,6 @@
 #include <string.h>
 #include <sys/socket.h>
 
-#include "common.hpp"
 #include "socket_utils.hpp"
 
 namespace {

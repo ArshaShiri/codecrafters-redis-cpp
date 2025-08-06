@@ -3,9 +3,20 @@
 #include <arpa/inet.h>
 
 #include <cstddef>
+#include <cstring>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <vector>
+
+constexpr auto INVALID_SOCKET = -1;
+
+class SocketException : public std::runtime_error {
+  public:
+    SocketException(const std::string &message)
+      : std::runtime_error(message + " (errno: " + std::to_string(errno) + " - " + std::strerror(errno) + ")") {
+    }
+};
 
 /**
  * @brief Use to configure a socket. Depending on the use of the socket (client or server) each field should be

@@ -6,9 +6,9 @@
 #include "data_manager.hpp"
 #include "resp_tokenizer.hpp"
 
-class ResponseGenerator {
+class MessageHandler {
   public:
-    ResponseGenerator(const char *input, std::size_t input_size, DataManager<std::string, std::string> &data_manager);
+    MessageHandler(const char *input, std::size_t input_size, DataManager<std::string, std::string> &data_manager);
     const std::string &get_response() const;
 
   private:
