@@ -6,13 +6,17 @@ namespace {
 using namespace std::chrono_literals;
 }
 
-MessageHandler::MessageHandler(const char *input,
-                               std::size_t input_size,
-                               DataManager<std::string, std::string> &data_manager)
-  : tokenizer_(input, input_size), data_manager_(data_manager) {
-    verify_input(input, input_size);
+MessageHandler::MessageHandler(DataManager<std::string, std::string> &data_manager)
+  : tokenizer_{}, data_manager_{data_manager} {
+}
 
-    const auto &tokens = tokenizer_.get_tokens();
+const std::string &MessageHandler::genera_response(std::string_view input) {
+    response_ = "";
+    const auto &tokens = tokenizer_.generate_tokens(input);
+
+    // TODO retrun of verification fails...
+    verify_input(tokens);
+
     const auto number_of_array_elements = std::get<int>(tokens[0].value);
     const auto &command_token = tokens[1];
 
@@ -41,16 +45,11 @@ MessageHandler::MessageHandler(const char *input,
     } else {
         generate_error_response("Unknown command: " + std::string(command));
     }
-}
 
-const std::string &MessageHandler::get_response() const {
     return response_;
 }
 
-void MessageHandler::verify_input(const char *input, std::size_t input_size) {
-    tokenizer_ = RESPTokenizer(input, input_size);
-    const auto &tokens = tokenizer_.get_tokens();
-
+void MessageHandler::verify_input(const std::vector<Token> &tokens) {
     if (tokens.empty()) {
         generate_error_response("Empty message");
         return;
@@ -143,12 +142,10 @@ void MessageHandler::generate_get_response(const std::vector<Token> &tokens) {
 
     const auto key = std::get<std::string_view>(key_token.value);
     const auto [exists, value] = data_manager_.get(std::string(key));
-    std::cout << "GET response for key: " << key << " exists: " << exists << ", value: " << value << std::endl;
+
     if (!exists) {
         response_ = "$-1\r\n"; // Null bulk string
     } else {
         response_ = "$" + std::to_string(value.size()) + "\r\n" + value + "\r\n";
     }
-
-    std::cout << "Generated GET response: " << response_ << std::endl;
 }

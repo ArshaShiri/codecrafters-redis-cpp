@@ -10,7 +10,14 @@ namespace {
 const std::string CRLF = "\r\n";
 }
 
-RESPTokenizer::RESPTokenizer(const char *input, std::size_t input_size) : input_view_{input, input_size} {
+RESPTokenizer::RESPTokenizer() {
+}
+
+std::vector<Token> &RESPTokenizer::generate_tokens(std::string_view input) {
+    position_ = 0;
+    tokens_.clear();
+    input_view_ = input;
+
     while (position_ < input_view_.size()) {
         const auto prefix = input_view_[position_];
         position_++;
@@ -26,6 +33,8 @@ RESPTokenizer::RESPTokenizer(const char *input, std::size_t input_size) : input_
             throw std::runtime_error("Invalid RESP prefix: " + std::string(1, prefix));
         }
     }
+
+    return tokens_;
 }
 
 std::ostream &operator<<(std::ostream &os, const Token &token) {
@@ -55,10 +64,6 @@ std::ostream &operator<<(std::ostream &os, const Token &token) {
     return os;
 }
 
-std::vector<Token> &RESPTokenizer::get_tokens() {
-    return tokens_;
-}
-
 void RESPTokenizer::print_tokens() const {
     for (const auto &token : tokens_) {
         std::cout << token;
@@ -77,7 +82,8 @@ std::string_view RESPTokenizer::get_view_before_the_next_CRLF() {
 
 void RESPTokenizer::add_array() {
     const auto array_length_view = get_view_before_the_next_CRLF();
-    tokens_.emplace_back(Token{TokenType::ARRAY, get_int_from_string_view(array_length_view)});
+    const auto token = Token{TokenType::ARRAY, get_int_from_string_view(array_length_view)};
+    tokens_.emplace_back(token);
 }
 
 void RESPTokenizer::add_bulk_string() {

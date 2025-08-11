@@ -28,7 +28,7 @@ TEST(TCPServer, serverReceiveData) {
     };
 
     TCPServer tcp_server{server_port};
-    tcp_server.recv_callback = server_callback;
+    tcp_server.receive_callback = server_callback;
 
     TCPSocketConfig client_tcp_socket_config;
     client_tcp_socket_config.ip = '0';

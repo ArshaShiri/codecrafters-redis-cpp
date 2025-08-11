@@ -7,5 +7,7 @@
 * Disable Nagle's algorithm in TCP socket?
 * Exceptions should be handled
 * Add latency measurement metrics
-* Handle requests based on their arrival time.
-* Replace callbacks with futures and promises in the TCP server. (The program is sequential now)
+* Replace callbacks with futures and promises in the TCP server.
+* Handle signals for program terminations
+* The TCP server should handle reading and writing as much as possible since it is edge triggered. (Handle large messages)
+* Make packet processing faster xdp, ebpf

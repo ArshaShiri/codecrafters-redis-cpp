@@ -22,46 +22,58 @@ void add_to_epoll_list(TCPSocket *socket, int epoll_file_descriptor) {
 } // namespace
 
 TCPServer::TCPServer(int listening_port)
-  : listening_socket{TCPSocketConfig{LOCAL_HOST, listening_port, LISTENING_SOCKET, BLOCKING, NO_TIME_STAMP}} {
-    epoll_file_descriptor = epoll_create(1);
+  : listening_socket_{TCPSocketConfig{LOCAL_HOST, listening_port, LISTENING_SOCKET, BLOCKING, NO_TIME_STAMP}} {
+    epoll_file_descriptor_ = epoll_create(1);
 
-    if (epoll_file_descriptor < 0) {
+    if (epoll_file_descriptor_ < 0) {
         throw SocketException("Epoll creation failed");
     }
 
-    add_to_epoll_list(&listening_socket, epoll_file_descriptor);
+    add_to_epoll_list(&listening_socket_, epoll_file_descriptor_);
+}
+
+TCPServer::~TCPServer() {
+    close(epoll_file_descriptor_);
 }
 
 void TCPServer::poll() {
-    const auto max_number_of_events = sockets.size() + 1;
-    const auto number_of_file_events = epoll_wait(epoll_file_descriptor, events.data(), max_number_of_events, 0);
-    if (number_of_file_events < 0) {
+    const auto number_of_events = epoll_wait(epoll_file_descriptor_, events.data(), events.size(), 0);
+    if (number_of_events < 0) {
         throw SocketException("Epoll wait failed");
     }
 
-    for (int event_number{0}; event_number < number_of_file_events; ++event_number) {
-        const auto &event = events[event_number];
+    for (int event_number{0}; event_number < number_of_events; ++event_number) {
+        auto &event = events[event_number];
         auto socket = reinterpret_cast<TCPSocket *>(event.data.ptr);
 
-        // Available for read
+        // Can be read
         if (event.events & EPOLLIN) {
-            if (socket == &listening_socket) {
+            if (socket == &listening_socket_) {
                 add_new_connections();
                 continue;
             } else {
                 const auto bytes_received = socket->receive();
                 if (bytes_received <= 0) {
-                    std::cout << "Connection is closed" << std::endl;
-                    sockets.erase(
-                      std::remove_if(sockets.begin(), sockets.end(), [&](const auto &s) { return s.get() == socket; }),
-                      sockets.end());
+                    file_descriptor_to_socket_.erase(file_descriptor_to_socket_.find(socket->file_descriptor));
+                    receive_sockets_.erase(socket);
+                    epoll_ctl(epoll_file_descriptor_, EPOLL_CTL_DEL, socket->file_descriptor, &event);
                     continue;
                 }
             }
         }
+        // Can send
         if (event.events & EPOLLOUT) {
-            socket->send();
+            receive_sockets_.insert(socket);
         }
+    }
+
+    std::for_each(receive_sockets_.begin(), receive_sockets_.end(), [](const auto &socket_ptr) { socket_ptr->send(); });
+}
+
+void TCPServer::enqueue_to_send_buffer(int client_file_descriptor, const std::string &message) {
+    if (auto client = file_descriptor_to_socket_.find(client_file_descriptor);
+        client != file_descriptor_to_socket_.end()) {
+        client->second->enqueue_to_send_buffer(message);
     }
 }
 
@@ -71,7 +83,7 @@ void TCPServer::add_new_connections() {
         socklen_t client_len = sizeof(client_address);
 
         const auto client_file_descriptor =
-          accept(listening_socket.file_descriptor, (struct sockaddr *)&client_address, &client_len);
+          accept(listening_socket_.file_descriptor, (struct sockaddr *)&client_address, &client_len);
         if (client_file_descriptor == INVALID_SOCKET) {
             break;
         }
@@ -82,8 +94,8 @@ void TCPServer::add_new_connections() {
         }
 
         auto socket = std::make_unique<TCPSocket>(client_file_descriptor);
-        socket->recv_callback = recv_callback;
-        add_to_epoll_list(socket.get(), epoll_file_descriptor);
-        sockets.push_back(std::move(socket));
+        socket->receive_callback = receive_callback;
+        add_to_epoll_list(socket.get(), epoll_file_descriptor_);
+        file_descriptor_to_socket_.emplace(client_file_descriptor, std::move(socket));
     }
 }

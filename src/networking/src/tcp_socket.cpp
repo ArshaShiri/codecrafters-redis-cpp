@@ -34,8 +34,8 @@ int TCPSocket::receive() noexcept {
 
     next_valid_receive_index += bytes_received;
 
-    if (recv_callback != nullptr) {
-        recv_callback(this);
+    if (receive_callback != nullptr) {
+        receive_callback(this);
     } else {
         std::cout << "No callback is set printing the received message:" << std::endl;
     }
@@ -44,12 +44,8 @@ int TCPSocket::receive() noexcept {
 }
 
 void TCPSocket::send() noexcept {
-
+    auto message = std::string(send_buffer.data(), next_valid_send_index);
     ::send(file_descriptor, send_buffer.data(), next_valid_send_index, MSG_DONTWAIT | MSG_NOSIGNAL);
-
-    // std::cout << bytes_sent << " bytes sent:\n"
-    //           << std::string{send_buffer.data(), send_buffer.data() + next_valid_send_index} << std::endl;
-
     next_valid_send_index = 0;
 }
 
@@ -61,6 +57,8 @@ void TCPSocket::enqueue_to_send_buffer(const std::string &message) {
 
     // TODO Extra copy (message can be written to the send buffer directly)
     std::copy(message.begin(), message.end(), send_buffer.begin() + next_valid_send_index);
+    next_valid_send_index = message.size();
+    auto message_ = std::string(send_buffer.data(), next_valid_send_index);
 }
 
 TCPSocket::~TCPSocket() {

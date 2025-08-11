@@ -7,12 +7,14 @@ file(GLOB SOURCES
     "${CMAKE_SOURCE_DIR}/src/message_handler/src/*.cpp"
     "${CMAKE_SOURCE_DIR}/src/networking/src/*.cpp"
     "${CMAKE_SOURCE_DIR}/src/redis/src/*.cpp"
+    "${CMAKE_SOURCE_DIR}/src/utils/src/*.cpp"
  )
 
 add_executable(${TARGET_NAME} ${SOURCES})
 add_subdirectory(message_handler)
 add_subdirectory(networking)
 add_subdirectory(redis)
+add_subdirectory(utils)
 
 target_include_directories(${TARGET_NAME}
     PUBLIC
@@ -20,6 +22,7 @@ target_include_directories(${TARGET_NAME}
    "${CMAKE_SOURCE_DIR}/src/message_handler/include"
    "${CMAKE_SOURCE_DIR}/src/networking/include"
    "${CMAKE_SOURCE_DIR}/src/redis/include"
+   "${CMAKE_SOURCE_DIR}/src/utils/include"
 )
 
 get_target_property(INCLUDE_DIRS ${TARGET_NAME} INCLUDE_DIRECTORIES)

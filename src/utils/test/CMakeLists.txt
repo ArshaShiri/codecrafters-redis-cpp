@@ -1,21 +1,15 @@
 include(GoogleTest)
 
-set(TARGET_NAME "message_handler_tests")
+set(TARGET_NAME "utils_tests")
 find_package(GTest)
-
 file(GLOB SOURCES
     "*.cpp"
     "../src/*.cpp"
-    "${CMAKE_SOURCE_DIR}/src/data_manager/src/*.cpp"
-    "${CMAKE_SOURCE_DIR}/src/message_handler/src/*.cpp"
-    "${CMAKE_SOURCE_DIR}/src/utils/src/*.cpp"
 )
 
 add_executable(${TARGET_NAME} ${SOURCES})
 
 target_include_directories(${TARGET_NAME}
-    PRIVATE "${CMAKE_SOURCE_DIR}/src/data_manager/include"
-    PRIVATE "${CMAKE_SOURCE_DIR}/src/message_handler/include"
     PRIVATE "${CMAKE_SOURCE_DIR}/src/utils/include"
 )
 

@@ -32,54 +32,46 @@ class Client {
     }
 
     void enqueueMessage(const std::string &message) {
-        std::unique_lock<std::mutex> lock(message_mutex_);
         messages_.push(message);
     }
 
-    void run(std::stop_token stop_token,
-             std::queue<std::string> &expected_responses,
-             std::queue<std::chrono::milliseconds> delays = {}) {
-        while (!stop_token.stop_requested()) {
-            std::unique_lock<std::mutex> lock(message_mutex_);
-            if (!messages_.empty()) {
-                const auto message = messages_.front();
-                messages_.pop();
-                lock.unlock();
+    void run(std::queue<std::string> &expected_responses, std::queue<std::chrono::milliseconds> delays = {}) {
 
-                send(socket_fd_, message.c_str(), message.size(), 0);
+        while (!messages_.empty()) {
+            const auto message = messages_.front();
+            messages_.pop();
 
-                bool received_response = false;
-                while (!received_response && !stop_token.stop_requested()) {
-                    char buffer[1024];
-                    const auto bytes_received = recv(socket_fd_, buffer, sizeof(buffer) - 1, 0);
+            send(socket_fd_, message.c_str(), message.size(), 0);
 
-                    if (bytes_received > 0) {
-                        received_response = true;
-                        buffer[bytes_received] = '\0'; // Null-terminate the received data
+            bool received_response = false;
+            while (!received_response) {
+                char buffer[1024];
+                const auto bytes_received = recv(socket_fd_, buffer, sizeof(buffer) - 1, 0);
+                if (bytes_received > 0) {
+                    received_response = true;
+                    buffer[bytes_received] = '\0'; // Null-terminate the received data
 
-                        // Check if the response matches the current expected response
-                        if (!expected_responses.empty()) {
-                            const auto expected_response = expected_responses.front();
-                            EXPECT_STREQ(buffer, expected_response.c_str());
-                            expected_responses.pop();
-                        }
+                    if (!expected_responses.empty()) {
+                        const auto expected_response = expected_responses.front();
+                        EXPECT_STREQ(buffer, expected_response.c_str());
+                        expected_responses.pop();
                     }
                 }
-                // Simulate some delay in requests from the client
-                if (!delays.empty()) {
-                    const auto delay = delays.front();
-                    std::this_thread::sleep_for(delay);
-                    delays.pop();
-                }
-            } else {
-                lock.unlock();
+            }
+
+            // Simulate some delay in requests from the client
+            if (!delays.empty()) {
+                const auto delay = delays.front();
+                std::this_thread::sleep_for(delay);
+                delays.pop();
             }
         }
+
+        EXPECT_TRUE(expected_responses.empty());
     }
 
   private:
     int socket_fd_;
-    std::mutex message_mutex_;
     std::queue<std::string> messages_;
 };
 
@@ -111,10 +103,7 @@ TEST_F(RedisTest, pingCommand) {
 
     Client client;
     client.enqueueMessage(ping_command);
-
-    std::jthread client_thread(
-      [&client, &expected_responses](std::stop_token stop_token) { client.run(stop_token, expected_responses); });
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    client.run(expected_responses);
 }
 
 TEST_F(RedisTest, echoCommand) {
@@ -125,10 +114,7 @@ TEST_F(RedisTest, echoCommand) {
 
     Client client;
     client.enqueueMessage(echo_command);
-
-    std::jthread client_thread(
-      [&client, &expected_responses](std::stop_token stop_token) { client.run(stop_token, expected_responses); });
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    client.run(expected_responses);
 }
 
 TEST_F(RedisTest, setAndGetCommand) {
@@ -156,11 +142,7 @@ TEST_F(RedisTest, setAndGetCommand) {
         delays.push(100ms);
     }
 
-    std::jthread client_thread([&client, &expected_responses, &delays](std::stop_token stop_token) {
-        client.run(stop_token, expected_responses, delays);
-    });
-
-    std::this_thread::sleep_for(std::chrono::seconds(2));
+    client.run(expected_responses, delays);
 }
 
 TEST_F(RedisTest, setCommandWithExpiry) {
@@ -191,10 +173,69 @@ TEST_F(RedisTest, setCommandWithExpiry) {
     // Wait another 100ms to ensure the key is invalidated.
     delays.push(100ms);
 
+    client.run(expected_responses, delays);
+}
 
-    std::jthread client_thread([&client, &expected_responses, &delays](std::stop_token stop_token) {
-        client.run(stop_token, expected_responses, delays);
-    });
+TEST_F(RedisTest, stressTest) {
+    const auto create_client = [](std::string message, std::size_t repeat) {
+        std::string echo_command = "*2\r\n$4\r\nECHO\r\n";
+        echo_command += "$" + std::to_string(message.size()) + "\r\n";
+        echo_command += message + "\r\n";
 
-    std::this_thread::sleep_for(std::chrono::seconds(2));
+        Client client;
+        for (std::size_t num{0}; num < repeat; ++num) {
+            client.enqueueMessage(echo_command);
+        }
+
+        return (client);
+    };
+
+    const auto create_expected_response = [](std::string message, std::size_t repeat) {
+        std::string expected_response = "$" + std::to_string(message.size()) + "\r\n";
+        expected_response += message + "\r\n";
+
+        std::queue<std::string> expected_responses;
+        for (std::size_t num{0}; num < repeat; ++num) {
+            expected_responses.push(expected_response);
+        }
+
+        return expected_responses;
+    };
+
+    // const auto create_delays = [](std::chrono::milliseconds delay, std::size_t repeat) {
+    //     std::queue<std::chrono::milliseconds> delays;
+    //     for (std::size_t num{0}; num < repeat; ++num) {
+    //         delays.push(delay);
+    //     }
+    // };
+
+    const std::string client_one_echo_message = "I am client one";
+    const auto client_one_number_of_repeats = 100000;
+    auto client_one = create_client(client_one_echo_message, client_one_number_of_repeats);
+    auto client_one_expected_responses =
+      create_expected_response(client_one_echo_message, client_one_number_of_repeats);
+
+    const std::string client_two_echo_message =
+      "Client two has a longer message that can fill the buffer up faster... Lets see what happens :D";
+    const auto client_two_number_of_repeats = 100000;
+    auto client_two = create_client(client_two_echo_message, client_two_number_of_repeats);
+    auto client_two_expected_responses =
+      create_expected_response(client_two_echo_message, client_two_number_of_repeats);
+
+    const std::string client_three_echo_message = "Client 3!!!!";
+    const auto client_three_number_of_repeats = 100000;
+    auto client_three = create_client(client_three_echo_message, client_three_number_of_repeats);
+    auto client_three_expected_responses =
+      create_expected_response(client_three_echo_message, client_three_number_of_repeats);
+
+
+    std::jthread client_one_thread(
+      [&client_one, &client_one_expected_responses]() { client_one.run(client_one_expected_responses); });
+
+    std::jthread client_two_thread(
+      [&client_two, &client_two_expected_responses]() { client_two.run(client_two_expected_responses); });
+
+    client_three.run(client_three_expected_responses);
+
+    std::this_thread::sleep_for(std::chrono::seconds(1));
 }

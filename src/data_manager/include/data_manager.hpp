@@ -6,8 +6,6 @@
 #include <unordered_map>
 
 using namespace std::chrono_literals;
-
-
 template<typename Key, typename Value>
 class DataManager {
     static inline constexpr auto MAX_DURATION = std::chrono::milliseconds::max();
@@ -30,9 +28,6 @@ class DataManager {
     bool set(Key key, Value value, std::chrono::milliseconds duration = MAX_DURATION) {
         ValueWithExpiry new_value;
         new_value.value = std::move(value);
-
-        std::cout << "Setting key: " << key << " with value: " << new_value.value << std::endl
-                  << "Duration: " << duration.count() << "ms" << std::endl;
 
         if (duration != MAX_DURATION) {
             new_value.duration = duration;
@@ -58,15 +53,9 @@ class DataManager {
         const auto &value_with_expiry = it->second;
 
         if (value_with_expiry.duration != MAX_DURATION) {
-            std::cout << "has expiry" << std::endl;
             const auto now = std::chrono::steady_clock::now();
             const auto time_diff =
               std::chrono::duration_cast<std::chrono::milliseconds>(now - value_with_expiry.time_added);
-            std::cout << "time_diff: " << time_diff.count() << std::endl;
-            std::cout << "value_with_expiry.duration: " << value_with_expiry.duration.count() << std::endl;
-
-            auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
-            std::cout << "now: " << ms << std::endl;
 
             if (time_diff >= value_with_expiry.duration) {
                 // Key has expired, remove it

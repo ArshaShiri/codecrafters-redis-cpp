@@ -47,5 +47,5 @@ struct TCPSocket {
     std::size_t next_valid_send_index = 0;
 
     // Function wrapper to callback when there is data to be processed.
-    std::function<void(TCPSocket *socket)> recv_callback = nullptr;
+    std::function<void(TCPSocket *socket)> receive_callback = nullptr;
 };

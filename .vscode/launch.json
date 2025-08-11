@@ -4,9 +4,9 @@
             "name": "Debug Test",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/Debug/src/common/test/tests",
+            "program": "${workspaceFolder}/build/Debug/src/redis/test/redis_tests",
             "args": [
-                "--gtest_filter=Socket.connection"
+                "--gtest_filter=RedisTest.setAndGetCommand"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
