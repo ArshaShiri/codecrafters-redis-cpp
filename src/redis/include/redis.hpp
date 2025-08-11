@@ -27,5 +27,4 @@ class Redis {
     DataManager<std::string, std::string> data_manager_;
 
     std::jthread tcp_server_thread_;
-    std::jthread message_handler_thread_;
 };

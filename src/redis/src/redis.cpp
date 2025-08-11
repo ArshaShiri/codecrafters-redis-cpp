@@ -30,7 +30,6 @@ void Redis::run() {
 void Redis::stop() {
     running_ = false;
     tcp_server_thread_.request_stop();
-    message_handler_thread_.request_stop();
 }
 
 void Redis::run_tcp_server() {
