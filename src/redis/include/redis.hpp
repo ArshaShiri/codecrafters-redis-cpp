@@ -11,7 +11,7 @@
 
 class Redis {
   public:
-    Redis(int listening_port);
+    Redis(int listening_port, RDBConfig rdb_config = {});
     void run();
     void stop();
 
@@ -25,6 +25,7 @@ class Redis {
     SPSCQueue<ResponseMessage> response_queue_;
 
     DataManager<std::string, std::string> data_manager_;
+    RDBConfig rdb_config_;
 
     std::jthread tcp_server_thread_;
 };
