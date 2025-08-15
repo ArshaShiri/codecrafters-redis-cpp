@@ -12,7 +12,7 @@
 #include "redis.hpp"
 
 namespace {
-static constexpr int LISTENING_PORT = 6000;
+constexpr int LISTENING_PORT = 6000;
 using namespace std::chrono_literals;
 
 class Client {
@@ -201,13 +201,6 @@ TEST_F(RedisTest, stressTest) {
 
         return expected_responses;
     };
-
-    // const auto create_delays = [](std::chrono::milliseconds delay, std::size_t repeat) {
-    //     std::queue<std::chrono::milliseconds> delays;
-    //     for (std::size_t num{0}; num < repeat; ++num) {
-    //         delays.push(delay);
-    //     }
-    // };
 
     const std::string client_one_echo_message = "I am client one";
     const auto client_one_number_of_repeats = 100000;
