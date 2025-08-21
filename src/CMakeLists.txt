@@ -6,6 +6,7 @@ file(GLOB SOURCES
     "${CMAKE_SOURCE_DIR}/src/data_manager/src/*.cpp"
     "${CMAKE_SOURCE_DIR}/src/message_handler/src/*.cpp"
     "${CMAKE_SOURCE_DIR}/src/networking/src/*.cpp"
+    "${CMAKE_SOURCE_DIR}/src/rdb_file_handler/src/*.cpp"
     "${CMAKE_SOURCE_DIR}/src/redis/src/*.cpp"
     "${CMAKE_SOURCE_DIR}/src/utils/src/*.cpp"
  )
@@ -21,9 +22,7 @@ target_include_directories(${TARGET_NAME}
    "${CMAKE_SOURCE_DIR}/src/data_manager/include"
    "${CMAKE_SOURCE_DIR}/src/message_handler/include"
    "${CMAKE_SOURCE_DIR}/src/networking/include"
+   "${CMAKE_SOURCE_DIR}/src/rdb_file_handler/include"
    "${CMAKE_SOURCE_DIR}/src/redis/include"
    "${CMAKE_SOURCE_DIR}/src/utils/include"
 )
-
-get_target_property(INCLUDE_DIRS ${TARGET_NAME} INCLUDE_DIRECTORIES)
-message(STATUS "Include directories: ${INCLUDE_DIRS}")

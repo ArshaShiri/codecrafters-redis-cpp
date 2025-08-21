@@ -1,9 +1,9 @@
 #pragma once
 
 #include <chrono>
-#include <iostream>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 using namespace std::chrono_literals;
 template<typename Key, typename Value>
@@ -65,6 +65,16 @@ class DataManager {
         }
 
         return {true, it->second.value};
+    }
+
+    std::vector<Value> get_keys() {
+        std::vector<Value> result;
+        result.reserve(data_store_.size());
+        for (const auto &key_value : data_store_) {
+            result.push_back(key_value.first);
+        }
+
+        return result;
     }
 
   private:

@@ -8,6 +8,7 @@ file(GLOB SOURCES
     "../src/*.cpp"
     "${CMAKE_SOURCE_DIR}/src/data_manager/src/*.cpp"
     "${CMAKE_SOURCE_DIR}/src/message_handler/src/*.cpp"
+    "${CMAKE_SOURCE_DIR}/src/rdb_file_handler/src/*.cpp"
     "${CMAKE_SOURCE_DIR}/src/utils/src/*.cpp"
 )
 
@@ -16,6 +17,7 @@ add_executable(${TARGET_NAME} ${SOURCES})
 target_include_directories(${TARGET_NAME}
     PRIVATE "${CMAKE_SOURCE_DIR}/src/data_manager/include"
     PRIVATE "${CMAKE_SOURCE_DIR}/src/message_handler/include"
+    PRIVATE "${CMAKE_SOURCE_DIR}/src/rdb_file_handler/include"
     PRIVATE "${CMAKE_SOURCE_DIR}/src/utils/include"
 )
 

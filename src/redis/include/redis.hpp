@@ -6,6 +6,7 @@
 
 #include "data_manager.hpp"
 #include "message_handler.hpp"
+#include "rdb_file_handler.hpp"
 #include "spsc_queue.hpp"
 #include "tcp_server.hpp"
 
@@ -25,7 +26,7 @@ class Redis {
     SPSCQueue<ResponseMessage> response_queue_;
 
     DataManager<std::string, std::string> data_manager_;
-    RDBConfig rdb_config_;
+    RDBFileHandler rdb_handler_;
 
     std::jthread tcp_server_thread_;
 };

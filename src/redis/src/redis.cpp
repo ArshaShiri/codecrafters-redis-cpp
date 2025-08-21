@@ -1,5 +1,9 @@
+#include <filesystem>
+#include <fstream>
+#include <string>
 #include <string_view>
 #include <utility>
+#include <vector>
 
 #include "redis.hpp"
 #include "tcp_socket.hpp"
@@ -10,7 +14,7 @@ constexpr std::size_t SIZE_OF_MESSAGE_QUEUE = 1024;
 
 Redis::Redis(int listening_port, RDBConfig rdb_config)
   : server_{listening_port}, message_queue_{SIZE_OF_MESSAGE_QUEUE}, response_queue_{SIZE_OF_MESSAGE_QUEUE},
-    data_manager_{}, rdb_config_{rdb_config} {
+    data_manager_{}, rdb_handler_{rdb_config, data_manager_} {
 
     const auto server_receive_callback = [&](auto client_socket) {
         const auto &socket_receive_buffer = client_socket->receive_buffer;
@@ -45,7 +49,7 @@ void Redis::run_tcp_server() {
 }
 
 void Redis::run_message_handler() {
-    auto message_handler = MessageHandler{rdb_config_, data_manager_};
+    auto message_handler = MessageHandler{rdb_handler_, data_manager_};
     RequestMessage request_message;
     while (running_) {
         if (message_queue_.pop(request_message)) {

@@ -3,6 +3,7 @@
 # TODOs
 
 * Add a proper logger
+* Better parsing of the commands (if else)
 * Try to use zero copy in message processing, custom allocators?
 * Disable Nagle's algorithm in TCP socket?
 * Exceptions should be handled

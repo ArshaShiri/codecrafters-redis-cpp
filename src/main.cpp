@@ -52,8 +52,6 @@ RDBConfig parseCommandLine(int argc, char *argv[]) {
 
 int main(int argc, char *argv[]) {
     const auto config = parseCommandLine(argc, argv);
-    std::cout << "Directory: " << config.dir << std::endl;
-    std::cout << "DB Filename: " << config.dbfilename << std::endl;
 
     Redis redis(6379, config);
     redis.run();

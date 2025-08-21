@@ -6,8 +6,9 @@ namespace {
 using namespace std::chrono_literals;
 }
 
-MessageHandler::MessageHandler(const RDBConfig &rdb_config, DataManager<std::string, std::string> &data_manager)
-  : tokenizer_{}, rdb_config_{rdb_config}, data_manager_{data_manager} {
+MessageHandler::MessageHandler(const RDBFileHandler &rdb_file_handler,
+                               DataManager<std::string, std::string> &data_manager)
+  : tokenizer_{}, rdb_file_handler_{rdb_file_handler}, data_manager_{data_manager} {
 }
 
 const std::string &MessageHandler::genera_response(std::string_view input) {
@@ -44,6 +45,8 @@ const std::string &MessageHandler::genera_response(std::string_view input) {
         generate_get_response(tokens);
     } else if (command == "CONFIG") {
         generate_rdb_config_response(tokens);
+    } else if (command == "KEYS") {
+        generate_keys_response(tokens);
     } else {
         generate_error_response("Unknown command: " + std::string(command));
     }
@@ -176,10 +179,29 @@ void MessageHandler::generate_rdb_config_response(const std::vector<Token> &toke
     response_ = "*2\r\n$3\r\ndir\r\n";
 
     if (target == "dir") {
-        response_ += "$" + std::to_string(rdb_config_.dir.size()) + "\r\n";
-        response_ += rdb_config_.dir + "\r\n";
+        const auto &dir = rdb_file_handler_.get_rdb_dir();
+        response_ += "$" + std::to_string(dir.size()) + "\r\n";
+        response_ += dir + "\r\n";
     } else {
-        response_ += "$" + std::to_string(rdb_config_.dbfilename.size()) + "\r\n";
-        response_ += rdb_config_.dbfilename + "\r\n";
+        const auto &file_name = rdb_file_handler_.get_rdb_file_name();
+        response_ += "$" + std::to_string(file_name.size()) + "\r\n";
+        response_ += file_name + "\r\n";
+    }
+}
+
+void MessageHandler::generate_keys_response(const std::vector<Token> &tokens) {
+    const auto &pattern_token = tokens[2];
+    const auto pattern = std::get<std::string_view>(pattern_token.value);
+
+    if (pattern == "*") {
+        generate_error_response("Only \"*\" is supported.");
+    }
+
+    // *<array_size>\r\n$<key_size>\r\n<key>\r\n
+    const auto keys = data_manager_.get_keys();
+
+    response_ = "*" + std::to_string(keys.size()) + "\r\n";
+    for (const auto &key : keys) {
+        response_ += "$" + std::to_string(key.size()) + "\r\n" + key + "\r\n";
     }
 }
