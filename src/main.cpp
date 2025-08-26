@@ -11,27 +11,37 @@ void printUsage(const char *progName) {
     std::cout << "Options:\n";
     std::cout << "  --dir PATH          Directory path (default: /tmp)\n";
     std::cout << "  --dbfilename FILE   Database filename (default: dump.rdb)\n";
+    std::cout << "  --port PORT_NUMBER  Port on which Redis listens (default: 6379)\n";
     std::cout << "  --help, -h          Show this help message\n";
 }
 
-RDBConfig parseCommandLine(int argc, char *argv[]) {
-    RDBConfig config;
+struct RedisConfig {
+    RDBConfig rdb_config;
+    int listening_port{6379};
+};
+
+RedisConfig parseCommandLine(int argc, char *argv[]) {
+    RedisConfig config;
 
     static struct option long_options[] = {{"dir", required_argument, nullptr, 'd'},
                                            {"dbfilename", required_argument, nullptr, 'f'},
-                                           {"help", no_argument, nullptr, 'h'},
+                                           {"port", required_argument, nullptr, 'p'},
+                                           {"help", required_argument, nullptr, 'h'},
                                            {0, 0, 0, 0}};
 
     int option_index = 0;
     int c;
 
-    while ((c = getopt_long(argc, argv, "d:f:h", long_options, &option_index)) != -1) {
+    while ((c = getopt_long(argc, argv, "d:f:p:h", long_options, &option_index)) != -1) {
         switch (c) {
         case 'd':
-            config.dir = optarg;
+            config.rdb_config.dir = optarg;
             break;
         case 'f':
-            config.dbfilename = optarg;
+            config.rdb_config.dbfilename = optarg;
+            break;
+        case 'p':
+            config.listening_port = std::stoi(optarg);
             break;
         case 'h':
             printUsage(argv[0]);
@@ -53,7 +63,7 @@ RDBConfig parseCommandLine(int argc, char *argv[]) {
 int main(int argc, char *argv[]) {
     const auto config = parseCommandLine(argc, argv);
 
-    Redis redis(6379, config);
+    Redis redis(config.listening_port, config.rdb_config);
     redis.run();
 
     return 0;
