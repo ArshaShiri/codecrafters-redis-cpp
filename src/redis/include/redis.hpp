@@ -10,12 +10,17 @@
 #include "spsc_queue.hpp"
 #include "tcp_server.hpp"
 
-class Redis {
-  private:
-    enum class Role { master, slave };
+enum class Role { master, slave };
 
+struct RedisConfig {
+    RDBConfig rdb_config{};
+    int listening_port{6379};
+    Role role{Role::master};
+};
+
+class Redis {
   public:
-    Redis(int listening_port, RDBConfig rdb_config = {});
+    Redis(RedisConfig config);
     void run();
     void stop();
 
@@ -31,6 +36,14 @@ class Redis {
         return role_ == Role::master ? "master" : "slave";
     }
 
+    const std::string &get_replication_id() const {
+        return replication_id_;
+    }
+
+    std::size_t get_replication_offset() const {
+        return replication_offset_;
+    }
+
   private:
     void run_tcp_server();
     void run_message_handler();
@@ -42,7 +55,9 @@ class Redis {
 
     DataManager<std::string, std::string> data_manager_;
     RDBFileHandler rdb_handler_;
+    Role role_;
+    std::string replication_id_{"8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb"};
+    std::size_t replication_offset_{0};
 
     std::jthread tcp_server_thread_;
-    Role role_{Role::master};
 };

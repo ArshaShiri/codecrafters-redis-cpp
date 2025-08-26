@@ -91,7 +91,7 @@ class RedisTest : public ::testing::Test {
     }
 
   private:
-    Redis redis_server_{LISTENING_PORT};
+    Redis redis_server_{RedisConfig{{}, LISTENING_PORT, {}}};
     std::jthread server_thread_;
 };
 

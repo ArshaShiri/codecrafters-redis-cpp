@@ -12,9 +12,9 @@ namespace {
 constexpr std::size_t SIZE_OF_MESSAGE_QUEUE = 1024;
 } // namespace
 
-Redis::Redis(int listening_port, RDBConfig rdb_config)
-  : server_{listening_port}, message_queue_{SIZE_OF_MESSAGE_QUEUE}, response_queue_{SIZE_OF_MESSAGE_QUEUE},
-    data_manager_{}, rdb_handler_{rdb_config, data_manager_} {
+Redis::Redis(RedisConfig config)
+  : server_{config.listening_port}, message_queue_{SIZE_OF_MESSAGE_QUEUE}, response_queue_{SIZE_OF_MESSAGE_QUEUE},
+    data_manager_{}, rdb_handler_{config.rdb_config, data_manager_}, role_{config.role} {
 
     const auto server_receive_callback = [&](auto client_socket) {
         const auto &socket_receive_buffer = client_socket->receive_buffer;

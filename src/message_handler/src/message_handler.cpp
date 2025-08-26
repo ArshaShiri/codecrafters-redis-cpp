@@ -218,8 +218,10 @@ void MessageHandler::generate_redis_info_response(const std::vector<Token> &toke
         return;
     }
 
-    const auto redis_role = redis_.get_role();
-    const auto response = "role:" + redis_role;
+    auto response = "role:" + redis_.get_role() + '\n';
+    response += "master_replid:" + redis_.get_replication_id() + '\n';
+    response += "master_repl_offset:" + std::to_string(redis_.get_replication_offset()) + '\n';
+
 
     response_ = "$" + std::to_string(response.size()) + "\r\n" + response + "\r\n";
 }
