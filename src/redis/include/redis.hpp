@@ -11,10 +11,25 @@
 #include "tcp_server.hpp"
 
 class Redis {
+  private:
+    enum class Role { master, slave };
+
   public:
     Redis(int listening_port, RDBConfig rdb_config = {});
     void run();
     void stop();
+
+    const std::string &get_rdb_dir() const {
+        return rdb_handler_.get_rdb_dir();
+    }
+
+    const std::string &get_rdb_file_name() const {
+        return rdb_handler_.get_rdb_file_name();
+    }
+
+    std::string get_role() const {
+        return role_ == Role::master ? "master" : "slave";
+    }
 
   private:
     void run_tcp_server();
@@ -29,4 +44,5 @@ class Redis {
     RDBFileHandler rdb_handler_;
 
     std::jthread tcp_server_thread_;
+    Role role_{Role::master};
 };

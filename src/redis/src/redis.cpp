@@ -49,7 +49,7 @@ void Redis::run_tcp_server() {
 }
 
 void Redis::run_message_handler() {
-    auto message_handler = MessageHandler{rdb_handler_, data_manager_};
+    auto message_handler = MessageHandler{*this, data_manager_};
     RequestMessage request_message;
     while (running_) {
         if (message_queue_.pop(request_message)) {

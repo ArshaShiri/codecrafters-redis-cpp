@@ -4,7 +4,6 @@
 #include <string>
 
 #include "data_manager.hpp"
-#include "rdb_file_handler.hpp"
 #include "resp_tokenizer.hpp"
 
 struct RequestMessage {
@@ -17,9 +16,11 @@ struct ResponseMessage {
     std::string message;
 };
 
+class Redis;
+
 class MessageHandler {
   public:
-    MessageHandler(const RDBFileHandler &rdb_file_handler, DataManager<std::string, std::string> &data_manager);
+    MessageHandler(const Redis &redis, DataManager<std::string, std::string> &data_manager);
     const std::string &genera_response(std::string_view input);
 
   private:
@@ -30,10 +31,11 @@ class MessageHandler {
     void generate_set_response(const std::vector<Token> &tokens);
     void generate_get_response(const std::vector<Token> &tokens);
     void generate_rdb_config_response(const std::vector<Token> &tokens);
+    void generate_redis_info_response(const std::vector<Token> &tokens);
     void generate_keys_response(const std::vector<Token> &tokens);
 
     std::string response_{""};
     RESPTokenizer tokenizer_;
-    const RDBFileHandler &rdb_file_handler_;
+    const Redis &redis_;
     DataManager<std::string, std::string> &data_manager_;
 };
